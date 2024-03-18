@@ -6,7 +6,7 @@ pipeline {
         dockerT = 'docker'
     }
     agent any
-
+    // Explicar como he desplegado kubernetes y que lo he desplegado en local
     tools {
         nodejs "node"
         dockerTool dockerT
@@ -19,7 +19,6 @@ pipeline {
                     checkout([$class: 'GitSCM', 
                         branches: [[name: '*/main']], 
                         userRemoteConfigs: [[credentialsId: 'MD-TOKEN', url: 'https://github.com/DiegoCanas/EJ-1']]])
-                        // AÑADIR EL TOKEN
                 }
                
             }
@@ -32,6 +31,7 @@ pipeline {
                         node -v 
                         npm -v
                         npm install
+                        npm i -D lint
                     """
                 }                
             }
@@ -39,7 +39,7 @@ pipeline {
 
         stage ('🥽Linteo'){
             steps{
-                echo("Linting...")
+                sh 'npm run lint'
             }
         }
 
@@ -53,7 +53,7 @@ pipeline {
         stage ('🔨Build'){
             steps{
                 script {
-                    echo ('hols')
+                    sh 'npm build'
                 }
                 
             }

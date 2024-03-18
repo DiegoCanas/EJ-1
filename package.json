@@ -5,9 +5,14 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" ",
-    "start": "node index.js"
+    "start": "node index.js",
+    "lint": "echo \"linting...\" ",
+    "lbuild": "echo \"building...\" "
   },
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "lint": "^0.8.19"
+  }
 }
