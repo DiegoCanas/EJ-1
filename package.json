@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" ",
     "start": "node index.js",
     "lint": "echo \"linting...\" ",
-    "lbuild": "echo \"building...\" "
+    "build": "echo \"building...\" "
   },
   "keywords": [],
   "author": "",
