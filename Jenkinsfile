@@ -28,19 +28,19 @@ pipeline {
         stage ('⬇️Instalacion de dependencias'){
             steps{
                 script {
-                    sh 'node -v'
-                    sh 'npm -v'
-                    sh 'npm install'
+                    sh """
+                        node -v 
+                        npm -v
+                        npm install
+                    """
                 }                
             }
-
         }
 
         stage ('🥽Linteo'){
             steps{
                 echo("Linting...")
             }
-
         }
 
         stage ('🧪Test'){
