@@ -1,3 +1,75 @@
+Map config = [
+    def TAG_TO_CHECK = calculateNextTag()
+    def PREVIOUS_TAG = lastTag()
+]
+
+String lastTag() {
+    sh('git fetch --tags')
+    return sh(script: 'git describe --tags --abbrev=0', returnStdout: true).trim()
+}
+
+String calculateNextTag() {
+    def lastTagValue = lastTag()
+    
+    if (lastTagValue == null) {
+        error("No se encontraron etiquetas en el repositorio.")
+        return null
+    }
+    
+    def tagParts = lastTagValue.tokenize('.')
+    def x = tagParts[0] as int
+    def y = tagParts[1] as int
+    def z = tagParts[2] as int
+    
+    if (isFeature()) {
+        y++
+    } else if (isBreak()) {
+        x++
+        y = 0
+        z = 0
+    } else if (isFix()) {
+        z++
+    } else if (isMaster()) {
+        x++
+        y = 0
+        z = 0
+    } else {
+        echo "No se reconoce la rama actual."
+    }
+    
+    echo "Versión calculada ${x}.${y}.${z}"
+    return "${x}.${y}.${z}"
+}
+
+void createTag(String nextTag) {
+    echo "Siguiente versión calculada: ${nextTag}"
+    sh "git tag ${nextTag}"
+    sh "git push origin ${nextTag}"
+}
+
+boolean isFeature() {
+    return env.BRANCH_NAME.startsWith('feature/')
+}
+
+boolean isBreak() {
+    return env.BRANCH_NAME == 'break'
+}
+
+boolean isFix() {
+    return env.BRANCH_NAME.startsWith('fix/')
+}
+
+boolean isMaster() {
+    return env.BRANCH_NAME == 'master'
+}
+
+void createTag(String nextTag) {
+    echo("Siguiente version calculada: ${nextTag}")
+    sh("git tag ${nextTag}")
+    sh("git push origin ${nextTag}")
+}
+
+
 pipeline {
     environment{
         registry = "diegocanas/server"
@@ -71,8 +143,10 @@ pipeline {
         stage ('⬆️Subida de la imagen al registry'){
             steps{
                 script {
+                    String tag = calculateNextTag()
+                    createTag(config.TAG_TO_CHECK)
                     docker.withRegistry( '', registryCredential ) {
-                    dockerImage.tag("latest")
+                    dockerImage.tag(tag)
                     dockerImage.push()
                     }
                 }
@@ -83,6 +157,7 @@ pipeline {
             steps{
                 script{
                     kubeconfig(credentialsId: 'kubeconfig') {
+                    sh "sed -i 's|image: diegocanas/server:.*|image: diegocanas/server:${TAG}|' deployment.yaml"    
                     sh 'kubectl apply -f service.yaml --namespace=namespace-server'
                     sh 'kubectl apply -f deployment.yaml --namespace=namespace-server'
                     sh 'kubectl get pods --namespace=namespace-server'
@@ -98,3 +173,4 @@ pipeline {
         }
     }
 }
+
