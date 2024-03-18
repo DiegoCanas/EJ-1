@@ -14,6 +14,6 @@ spec:
     spec:
       containers:
       - name: container-server
-        image: diegocanas/server:${TAG}
+        image: diegocanas/server:${TAG_TO_CHECK}
         ports:
         - containerPort: 8000
