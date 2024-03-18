@@ -25,6 +25,6 @@ erver-service 8888:8000
 
 Con esta herramienta he podido acceder desde el localhost:8888 a mi aplicación.
 
-
+*En una rama feat estaba trabajando en la adición de un versionado para que el tag no sea un latest constante, si no que dependiendo de la rama desde donde se hace un push se actualice el tag.
 
 
