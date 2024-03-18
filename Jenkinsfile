@@ -1,8 +1,3 @@
-Map config = [
-    def TAG_TO_CHECK = calculateNextTag()
-    def PREVIOUS_TAG = lastTag()
-]
-
 String lastTag() {
     sh('git fetch --tags')
     return sh(script: 'git describe --tags --abbrev=0', returnStdout: true).trim()
@@ -10,17 +5,17 @@ String lastTag() {
 
 String calculateNextTag() {
     def lastTagValue = lastTag()
-    
+
     if (lastTagValue == null) {
         error("No se encontraron etiquetas en el repositorio.")
         return null
     }
-    
+
     def tagParts = lastTagValue.tokenize('.')
     def x = tagParts[0] as int
     def y = tagParts[1] as int
     def z = tagParts[2] as int
-    
+
     if (isFeature()) {
         y++
     } else if (isBreak()) {
@@ -36,7 +31,7 @@ String calculateNextTag() {
     } else {
         echo "No se reconoce la rama actual."
     }
-    
+
     echo "Versión calculada ${x}.${y}.${z}"
     return "${x}.${y}.${z}"
 }
@@ -63,19 +58,13 @@ boolean isMaster() {
     return env.BRANCH_NAME == 'master'
 }
 
-void createTag(String nextTag) {
-    echo("Siguiente version calculada: ${nextTag}")
-    sh("git tag ${nextTag}")
-    sh("git push origin ${nextTag}")
-}
-
-
 pipeline {
-    environment{
+    environment {
         registry = "diegocanas/server"
         registryCredential = 'dockerhub'
         dockerImage = ''
         dockerT = 'docker'
+        TAG_TO_CHECK = ''
     }
     agent any
 
@@ -85,90 +74,84 @@ pipeline {
     }
 
     stages {
-        stage ('🏁Checkout'){
-            steps{
-                script{
+        stage('🏁Checkout') {
+            steps {
+                script {
                     checkout([$class: 'GitSCM', 
                         branches: [[name: '*/main']], 
                         userRemoteConfigs: [[credentialsId: 'MD-TOKEN', url: 'https://github.com/DiegoCanas/EJ-1']]])
                         // AÑADIR EL TOKEN
                 }
-               
             }
         }
 
-        stage ('⬇️Instalacion de dependencias'){
-            steps{
+        stage('⬇️Instalacion de dependencias') {
+            steps {
                 script {
                     sh 'node -v'
                     sh 'npm -v'
                     sh 'npm install'
                 }                
             }
-
         }
 
-        stage ('🥽Linteo'){
-            steps{
+        stage('🥽Linteo') {
+            steps {
                 echo("Linting...")
             }
-
         }
 
-        stage ('🧪Test'){
-            steps{
+        stage('🧪Test') {
+            steps {
                 sh 'npm test'
             }
-
         }
 
-        stage ('🔨Build'){
-            steps{
+        stage('🔨Build') {
+            steps {
                 script {
-                    echo ('hols')
+                    echo 'hols'
                 }
-                
             }
-
         }
 
-        stage ('🪄Creación de la imagen docker'){
-            steps{
+        stage('🪄Creación de la imagen docker') {
+            steps {
                 script {
                     dockerImage = docker.build registry
                 }
             }
         }
 
-        stage ('⬆️Subida de la imagen al registry'){
-            steps{
+        stage('⬆️Subida de la imagen al registry') {
+            steps {
                 script {
-                    String tag = calculateNextTag()
-                    createTag(config.TAG_TO_CHECK)
-                    docker.withRegistry( '', registryCredential ) {
-                    dockerImage.tag(tag)
-                    dockerImage.push()
+                    TAG_TO_CHECK = calculateNextTag()
+                    createTag(TAG_TO_CHECK)
+                    docker.withRegistry('', registryCredential) {
+                        dockerImage.tag(TAG_TO_CHECK)
+                        dockerImage.push()
                     }
                 }
             }
         }
 
-        stage ('✈️Despliegue'){
-            steps{
-                script{
+        stage('✈️Despliegue') {
+            steps {
+                script {
                     kubeconfig(credentialsId: 'kubeconfig') {
-                    sh "sed -i 's|image: diegocanas/server:.*|image: diegocanas/server:${TAG}|' deployment.yaml"    
-                    sh 'kubectl apply -f service.yaml --namespace=namespace-server'
-                    sh 'kubectl apply -f deployment.yaml --namespace=namespace-server'
-                    sh 'kubectl get pods --namespace=namespace-server'
-
+                        sh "sed -i 's|image: diegocanas/server:.*|image: diegocanas/server:${TAG_TO_CHECK}|' deployment.yaml"
+                        sh 'kubectl apply -f service.yaml --namespace=namespace-server'
+                        sh 'kubectl apply -f deployment.yaml --namespace=namespace-server'
+                        sh 'kubectl get pods --namespace=namespace-server'
                     }
                 }
             }
         }
     }
+
     post {
-        always{
+        always {
             cleanWs()
         }
     }
