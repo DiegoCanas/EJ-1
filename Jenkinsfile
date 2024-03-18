@@ -82,7 +82,7 @@ pipeline {
         stage ('✈️Despliegue'){
             steps{
                 script{
-                    kubeconfig(credentialsId: 'kubeconfi') {
+                    kubeconfig(credentialsId: 'kubeconfig') {
                     sh 'kubectl apply -f service.yaml --namespace=namespace-server'
                     sh 'kubectl apply -f deployment.yaml --namespace=namespace-server'
                     sh 'kubectl get pods --namespace=namespace-server'
