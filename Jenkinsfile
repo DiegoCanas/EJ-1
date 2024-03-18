@@ -6,7 +6,7 @@ pipeline {
         dockerT = 'docker'
     }
     agent any
-    // Explicar como he desplegado kubernetes y que lo he desplegado en local
+
     tools {
         nodejs "node"
         dockerTool dockerT
@@ -19,8 +19,7 @@ pipeline {
                     checkout([$class: 'GitSCM', 
                         branches: [[name: '*/main']], 
                         userRemoteConfigs: [[credentialsId: 'MD-TOKEN', url: 'https://github.com/DiegoCanas/EJ-1']]])
-                }
-               
+                } 
             }
         }
 
@@ -83,9 +82,11 @@ pipeline {
             steps{
                 script{
                     kubeconfig(credentialsId: 'kubeconfig') {
-                    sh 'kubectl apply -f service.yaml --namespace=namespace-server'
-                    sh 'kubectl apply -f deployment.yaml --namespace=namespace-server'
-                    sh 'kubectl get pods --namespace=namespace-server'
+                    sh """
+                        kubectl apply -f service.yaml --namespace=namespace-server
+                        kubectl apply -f deployment.yaml --namespace=namespace-server
+                        kubectl get pods --namespace=namespace-server
+                    """
 
                     }
                 }

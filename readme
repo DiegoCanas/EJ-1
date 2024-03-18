@@ -1,0 +1,30 @@
+EXPLICACIÓN EJ 1
+
+*Se adjuntará en el correo un video del funcionamiento de la pipeline y la aplicación desplegada
+
+Objetivo: Construcción de una pipeline que realice el CI/CD de una aplicación.
+
+1. He creado una aplicación muy sencilla en node la cual simplemente responde por pantalla en el puerto 8000
+
+2. Dockerizo la aplicación 
+
+3. Despliego en local mediante los archivos deployment.yaml y service.yaml
+
+Despues de realizar las pruebas en local y viendo el correcto funcionamiento, procedemos a la construcción de
+la pipeline.
+
+ENTORNO:
+Añadimos credenciales del registry de dockerhub y variables de entorno que nos van a ayudar a almacenar valores.
+
+AGENT ANY:
+En mi caso, he desplegado el Kubernetes de forma local utilizando la herramienta de minikube, trabajando en otro entorno con el agent any podría buscar la ejecución en un cluster concreto de kubernetes
+
+Posterior al buen funcionamiento, he tenido problemas para exponer el puerto a fuera de minikube, para ello he
+utilizado la siguiente herramienta: kubectl -n namespace-server port-forward service/s
+erver-service 8888:8000
+
+Con esta herramienta he podido acceder desde el localhost:8888 a mi aplicación.
+
+
+
+
